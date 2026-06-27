@@ -1,0 +1,34 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0d1117;
+  --bg-card: #161b22;
+  --bg-row: #161b22;
+  --bg-row-alt: #1c2128;
+  --border: rgba(48, 54, 61, 0.9);
+  --border-light: rgba(48, 54, 61, 0.5);
+  --accent: #2CC295;
+  --text: #e6edf3;
+  --text-soft: #8b949e;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(48,54,61,0.8); border-radius: 3px; }
+
+button, input, textarea, select {
+  font-family: 'Inter', sans-serif;
+}
