@@ -3,7 +3,8 @@ import { useState } from 'react';
 const CLASSIFICATIONS = [
   { id: 'A', label: 'A — Rock Star', desc: 'Alto desempenho, referência no time', bg: '#0d2818', text: '#2CC295', border: 'rgba(44,194,149,0.45)', dot: '#2CC295' },
   { id: 'A (potencial)', label: 'A (Potencial)', desc: 'Caminhando para ser um Rock Star', bg: '#102215', text: '#34d399', border: 'rgba(52,211,153,0.35)', dot: '#34d399' },
-  { id: 'B', label: 'B — Consistente', desc: 'Entrega consistentemente, pilar do time', bg: '#0d1f38', text: '#58a6ff', border: 'rgba(88,166,255,0.4)', dot: '#58a6ff' },
+  { id: 'B', label: 'B — Consistente', desc: 'Entrega consistente, não irá fazer além do esperado', bg: '#0d1f38', text: '#58a6ff', border: 'rgba(88,166,255,0.4)', dot: '#58a6ff' },
+  { id: 'B (potencial)', label: 'B (Potencial)', desc: 'Crescendo, mas ainda inconsistente', bg: '#0a1a30', text: '#7cb9ff', border: 'rgba(124,185,255,0.3)', dot: '#7cb9ff' },
   { id: 'C', label: 'C — Atrapalha', desc: 'Atrapalha o time e a entrega', bg: '#2a0f0f', text: '#f87171', border: 'rgba(248,113,113,0.4)', dot: '#f87171' },
 ];
 
@@ -36,55 +37,61 @@ function Badge({ id }) {
   );
 }
 
-function PyramidTier({ ids, players, width, isTop, isBottom }) {
+function PyramidTier({ ids, players, clipPath, height = 120, leftPct, rightPct }) {
   const mainId = ids[0];
   const c = CONFIG[mainId];
   const allPlayers = players.filter(p => ids.includes(p.classificacao));
-  const borderRadius = isTop ? '8px 8px 0 0' : isBottom ? '0 0 8px 8px' : '0';
+  const midPct = (leftPct + rightPct) / 2;
+  const visibleWidth = rightPct - leftPct; // % of container that's visible at midpoint
 
   return (
-    <div style={{
-      width, margin: '0 auto',
-      background: c.bg,
-      border: `1px solid ${c.border}`,
-      borderRadius,
-      padding: '12px 16px',
-      minHeight: 70,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div style={{ width: '100%', height, position: 'relative' }}>
+      {/* Trapezoid background */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: c.bg,
+        clipPath,
+      }} />
+      {/* Label on the left side */}
+      <div style={{
+        position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+        display: 'flex', flexDirection: 'column', gap: 2,
+      }}>
         {ids.map(id => (
-          <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{
-              width: 22, height: 22, background: `${CONFIG[id].dot}22`,
-              border: `1.5px solid ${CONFIG[id].dot}`, borderRadius: 4,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, fontWeight: 700, color: CONFIG[id].text, flexShrink: 0,
-            }}>
-              {id === 'A (potencial)' ? 'A*' : id}
-            </span>
-            <span style={{ fontSize: 11, color: `${CONFIG[id].text}aa`, fontWeight: 500 }}>
-              {CONFIG[id].label.split('—')[1]?.trim() || CONFIG[id].label}
-            </span>
-          </div>
+          <span key={id} style={{
+            fontSize: 9, fontWeight: 700, color: CONFIG[id].text,
+            background: `${CONFIG[id].dot}18`,
+            border: `1px solid ${CONFIG[id].dot}40`,
+            borderRadius: 3, padding: '1px 5px', letterSpacing: '0.02em',
+            whiteSpace: 'nowrap',
+          }}>
+            {id === 'A (potencial)' ? 'A*' : id === 'B (potencial)' ? 'B*' : id}
+          </span>
         ))}
       </div>
-
-      {allPlayers.length > 0 ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
-          {allPlayers.map(p => (
-            <span key={p.id} style={{
-              background: `${c.dot}12`, border: `1px solid ${c.dot}30`,
-              borderRadius: 20, padding: '2px 10px', fontSize: 11,
-              color: '#e6edf3', fontWeight: 500,
-            }}>
-              {p.nome}{p.funcao ? ` · ${p.funcao}` : ''}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <span style={{ fontSize: 11, color: 'rgba(139,148,158,0.35)' }}>nenhum colaborador</span>
-      )}
+      {/* Names centered in visible area */}
+      <div style={{
+        position: 'absolute', top: 0, bottom: 0,
+        left: `${leftPct}%`, width: `${visibleWidth}%`,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 4,
+      }}>
+        {allPlayers.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
+            {allPlayers.map(p => (
+              <span key={p.id} style={{
+                background: `${c.dot}15`, border: `1px solid ${c.dot}40`,
+                borderRadius: 20, padding: '2px 8px', fontSize: 11,
+                color: '#e6edf3', fontWeight: 500, whiteSpace: 'nowrap',
+              }}>
+                {p.nome}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)' }}>—</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -93,14 +100,34 @@ export default function App() {
   const [form, setForm] = useState({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
   const [team, setTeam] = useState([]);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
   const handleAdd = () => {
     if (!form.nome.trim()) return;
-    setTeam(prev => [...prev, { ...form, id: Date.now() }]);
+    if (editingId) {
+      setTeam(prev => prev.map(p => p.id === editingId ? { ...form, id: editingId } : p));
+      setEditingId(null);
+    } else {
+      setTeam(prev => [...prev, { ...form, id: Date.now() }]);
+    }
     setForm({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
   };
 
-  const handleRemove = (id) => setTeam(prev => prev.filter(p => p.id !== id));
+  const handleEdit = (p) => {
+    setForm({ nome: p.nome, funcao: p.funcao, classificacao: p.classificacao, comentario: p.comentario });
+    setEditingId(p.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
+  };
+
+  const handleRemove = (id) => {
+    setTeam(prev => prev.filter(p => p.id !== id));
+    if (editingId === id) handleCancelEdit();
+  };
 
   const focusStyle = (name) => focusedInput === name
     ? { ...inputStyle, borderColor: '#2CC295' }
@@ -119,13 +146,35 @@ export default function App() {
             Dinâmica ABC
           </span>
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#e6edf3', letterSpacing: '-0.02em', marginBottom: 4 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#e6edf3', letterSpacing: '-0.02em', marginBottom: 12 }}>
           Análise de Equipe
         </h1>
-        <p style={{ fontSize: 13, color: '#8b949e' }}>
-          Classifique colaboradores e visualize a dinâmica do seu time.
+        <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 4, lineHeight: 1.6 }}>
+          Essa ferramenta ajuda a analisar a sua estrutura atual de pessoas, separando todos os colaboradores em uma pirâmide com 3 níveis.
         </p>
-        <div style={{ marginTop: 20, height: 1, background: 'rgba(48,54,61,0.9)' }} />
+        <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 20, lineHeight: 1.6 }}>
+          Classifique cada uma das pessoas do seu time dentro da Matriz ABC.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {[
+            { id: 'A', color: '#2CC295', title: 'A — Rockstar', desc: 'É uma pessoa que se sair da empresa fará muita falta, pois tem uma entrega acima da média e é estratégica.' },
+            { id: 'B', color: '#58a6ff', title: 'B — Entrega consistente', desc: 'É uma pessoa que entrega de maneira consistente as suas tarefas, mas que não irá fazer grandes entregas ou ser extremamente estratégica para a empresa.' },
+            { id: 'C', color: '#f87171', title: 'C — Atrapalha o time e a entrega', desc: 'É uma pessoa que não faz suas entregas de maneira consistente e ainda atrapalha o time e a entrega final dos projetos / tarefas.' },
+          ].map(item => (
+            <div key={item.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{
+                width: 22, height: 22, borderRadius: 4, flexShrink: 0, marginTop: 1,
+                background: `${item.color}18`, border: `1.5px solid ${item.color}55`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700, color: item.color,
+              }}>{item.id}</span>
+              <p style={{ fontSize: 12, color: '#8b949e', lineHeight: 1.6, margin: 0 }}>
+                <span style={{ color: item.color, fontWeight: 600 }}>{item.title}:</span>{' '}{item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div style={{ height: 1, background: 'rgba(48,54,61,0.9)' }} />
       </div>
 
       <div style={{
@@ -134,15 +183,27 @@ export default function App() {
       }}>
         {/* Form */}
         <div style={{
-          background: '#161b22', border: '1px solid rgba(48,54,61,0.9)',
+          background: '#161b22', border: `1px solid ${editingId ? 'rgba(88,166,255,0.4)' : 'rgba(48,54,61,0.9)'}`,
           borderRadius: 12, padding: 24, position: 'sticky', top: 24,
+          transition: 'border-color 0.2s',
         }}>
-          <h2 style={{
-            fontSize: 11, fontWeight: 600, color: '#2CC295',
-            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20,
-          }}>
-            Adicionar colaborador
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h2 style={{
+              fontSize: 11, fontWeight: 600,
+              color: editingId ? '#58a6ff' : '#2CC295',
+              textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0,
+            }}>
+              {editingId ? '✎ Editando colaborador' : 'Adicionar colaborador'}
+            </h2>
+            {editingId && (
+              <button onClick={handleCancelEdit} style={{
+                background: 'none', border: 'none', color: '#8b949e',
+                cursor: 'pointer', fontSize: 11, padding: 0,
+              }}>
+                Cancelar
+              </button>
+            )}
+          </div>
 
           {/* Nome */}
           <div style={{ marginBottom: 14 }}>
@@ -203,7 +264,7 @@ export default function App() {
                       borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 10, fontWeight: 700, color: selected ? cls.text : '#8b949e',
                     }}>
-                      {cls.id === 'A (potencial)' ? 'A*' : cls.id}
+                      {cls.id === 'A (potencial)' ? 'A*' : cls.id === 'B (potencial)' ? 'B*' : cls.id}
                     </span>
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: selected ? cls.text : '#e6edf3' }}>
@@ -222,14 +283,14 @@ export default function App() {
           {/* Comentário */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>
-              Comentário
+              Observações sobre a pessoa
             </label>
             <textarea
               value={form.comentario}
               onChange={e => setForm({ ...form, comentario: e.target.value })}
               onFocus={() => setFocusedInput('comentario')}
               onBlur={() => setFocusedInput(null)}
-              placeholder="Observações sobre o colaborador..."
+              placeholder="Ex: atenta a detalhes, cumpre prazos, alta capacidade de aprendizado, entrega dentro do esperado, não esteve disponível algumas vezes que precisamos, atrasa as entregas, qualidade de execução abaixo do esperado, etc."
               rows={3}
               style={{ ...focusStyle('comentario'), resize: 'vertical', minHeight: 72, lineHeight: 1.5 }}
             />
@@ -239,14 +300,15 @@ export default function App() {
             onClick={handleAdd}
             disabled={!form.nome.trim()}
             style={{
-              width: '100%', background: form.nome.trim() ? '#2CC295' : 'rgba(44,194,149,0.3)',
-              color: form.nome.trim() ? '#0d1117' : 'rgba(44,194,149,0.5)',
+              width: '100%',
+              background: !form.nome.trim() ? 'rgba(44,194,149,0.3)' : editingId ? '#58a6ff' : '#2CC295',
+              color: !form.nome.trim() ? 'rgba(44,194,149,0.5)' : '#0d1117',
               border: 'none', borderRadius: 8, padding: '11px',
               fontSize: 13, fontWeight: 700, cursor: form.nome.trim() ? 'pointer' : 'not-allowed',
               transition: 'all 0.15s',
             }}
           >
-            + Adicionar ao time
+            {editingId ? '✓ Salvar alterações' : '+ Adicionar ao time'}
           </button>
 
           {team.length > 0 && (
@@ -296,7 +358,7 @@ export default function App() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#1c2128' }}>
-                    {['Nome / Função', 'Pontuação ABC', 'Comentário', ''].map((h, i) => (
+                    {['Nome / Função', 'Classificação ABC', 'Comentário', ''].map((h, i) => (
                       <th key={i} style={{
                         padding: '10px 16px', textAlign: 'left',
                         fontSize: 10, color: '#8b949e', fontWeight: 500,
@@ -328,7 +390,22 @@ export default function App() {
                       <td style={{ padding: '12px 16px', fontSize: 12, color: '#8b949e', maxWidth: 300, lineHeight: 1.5 }}>
                         {p.comentario || <span style={{ color: 'rgba(139,148,158,0.4)' }}>—</span>}
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => handleEdit(p)}
+                          title="Editar"
+                          style={{
+                            background: editingId === p.id ? 'rgba(88,166,255,0.15)' : 'none',
+                            border: `1px solid ${editingId === p.id ? 'rgba(88,166,255,0.4)' : 'transparent'}`,
+                            borderRadius: 6, color: editingId === p.id ? '#58a6ff' : '#8b949e',
+                            cursor: 'pointer', fontSize: 13, padding: '2px 7px',
+                            lineHeight: 1, transition: 'all 0.1s', marginRight: 4,
+                          }}
+                          onMouseEnter={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#58a6ff'; e.currentTarget.style.borderColor = 'rgba(88,166,255,0.3)'; }}}
+                          onMouseLeave={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'transparent'; }}}
+                        >
+                          ✎
+                        </button>
                         <button
                           onClick={() => handleRemove(p.id)}
                           title="Remover"
@@ -361,10 +438,35 @@ export default function App() {
                   Distribuição visual do time por classificação
                 </p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <PyramidTier ids={['A', 'A (potencial)']} players={team} width="44%" isTop />
-                <PyramidTier ids={['B']} players={team} width="68%" />
-                <PyramidTier ids={['C']} players={team} width="92%" isBottom />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%' }}>
+                {/* Pyramid tip */}
+                <div style={{
+                  width: '100%', height: 22,
+                  background: CONFIG['A'].bg,
+                  clipPath: 'polygon(50% 0%, 52% 100%, 48% 100%)',
+                  flexShrink: 0,
+                }} />
+                <PyramidTier
+                  ids={['A', 'A (potencial)']}
+                  players={team}
+                  clipPath="polygon(48% 0%, 52% 0%, 68% 100%, 32% 100%)"
+                  height={110}
+                  leftPct={40} rightPct={60}
+                />
+                <PyramidTier
+                  ids={['B', 'B (potencial)']}
+                  players={team}
+                  clipPath="polygon(32% 0%, 68% 0%, 84% 100%, 16% 100%)"
+                  height={110}
+                  leftPct={24} rightPct={76}
+                />
+                <PyramidTier
+                  ids={['C']}
+                  players={team}
+                  clipPath="polygon(16% 0%, 84% 0%, 100% 100%, 0% 100%)"
+                  height={110}
+                  leftPct={8} rightPct={92}
+                />
               </div>
               <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {CLASSIFICATIONS.map(cls => (
