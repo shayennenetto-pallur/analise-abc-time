@@ -12,14 +12,14 @@ const CONFIG = Object.fromEntries(CLASSIFICATIONS.map(c => [c.id, c]));
 
 const NINE_BOX_CONFIG = [
   { d: 'alto',  p: 'alto',  num: 9, label: 'Estrela',        color: '#2CC295', bg: '#0a2016' },
-  { d: 'alto',  p: 'medio', num: 8, label: 'Pilar',          color: '#34d399', bg: '#0d2018' },
-  { d: 'alto',  p: 'baixo', num: 7, label: 'Especialista',   color: '#58a6ff', bg: '#0d1f38' },
-  { d: 'medio', p: 'alto',  num: 6, label: 'Alto Potencial', color: '#a78bfa', bg: '#18102e' },
-  { d: 'medio', p: 'medio', num: 5, label: 'Núcleo',         color: '#f59e0b', bg: '#1c1500' },
-  { d: 'medio', p: 'baixo', num: 4, label: 'Sólido',         color: '#fbbf24', bg: '#1a1200' },
-  { d: 'baixo', p: 'alto',  num: 3, label: 'Diamante Bruto', color: '#fb923c', bg: '#1e1000' },
-  { d: 'baixo', p: 'medio', num: 2, label: 'Dilema',         color: '#f87171', bg: '#250d0d' },
-  { d: 'baixo', p: 'baixo', num: 1, label: 'Subperformance', color: '#ef4444', bg: '#2a0808' },
+  { d: 'alto',  p: 'medio', num: 8, label: 'Alto Impacto',   color: '#34d399', bg: '#0d2018' },
+  { d: 'medio', p: 'alto',  num: 7, label: 'Alto Potencial', color: '#7ee787', bg: '#0e2012' },
+  { d: 'alto',  p: 'baixo', num: 6, label: 'Sólido',         color: '#fbbf24', bg: '#1a1200' },
+  { d: 'medio', p: 'medio', num: 5, label: 'Consistente',    color: '#facc15', bg: '#1c1500' },
+  { d: 'baixo', p: 'alto',  num: 4, label: 'Enigma',         color: '#eab308', bg: '#1a1400' },
+  { d: 'medio', p: 'baixo', num: 3, label: 'Efetivo',        color: '#fb923c', bg: '#1e1000' },
+  { d: 'baixo', p: 'medio', num: 2, label: 'Dilema',         color: '#f97316', bg: '#1e0f00' },
+  { d: 'baixo', p: 'baixo', num: 1, label: 'Risco',          color: '#ef4444', bg: '#2a0808' },
 ];
 
 const NINE_BOX_MAP = Object.fromEntries(NINE_BOX_CONFIG.map(b => [`${b.d}-${b.p}`, b]));
@@ -97,8 +97,8 @@ function PyramidTier({ ids, players, clipPath, height = 120, leftPct, rightPct }
 }
 
 function NineBoxMatrix({ team }) {
-  const rows = ['alto', 'medio', 'baixo'];
-  const cols = ['baixo', 'medio', 'alto'];
+  const rows = ['alto', 'medio', 'baixo']; // potencial (top → bottom)
+  const cols = ['baixo', 'medio', 'alto']; // performance (left → right)
   const rowLabel = { alto: 'Alto', medio: 'Médio', baixo: 'Baixo' };
   const colLabel = { baixo: 'Baixo', medio: 'Médio', alto: 'Alto' };
 
@@ -109,7 +109,7 @@ function NineBoxMatrix({ team }) {
           Matriz Nine Box
         </h2>
         <p style={{ fontSize: 11, color: '#8b949e', marginTop: 4 }}>
-          Distribuição do time por desempenho e potencial
+          Distribuição do time por performance e potencial
         </p>
       </div>
 
@@ -121,25 +121,25 @@ function NineBoxMatrix({ team }) {
             writingMode: 'vertical-rl', transform: 'rotate(180deg)',
             textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap',
           }}>
-            Desempenho ↑
+            Potencial ↑
           </span>
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Grid rows */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {rows.map(des => (
-              <div key={des} style={{ display: 'flex', gap: 3, alignItems: 'stretch' }}>
+            {rows.map(pot => (
+              <div key={pot} style={{ display: 'flex', gap: 3, alignItems: 'stretch' }}>
                 {/* Row label */}
                 <div style={{ width: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 5 }}>
-                  <span style={{ fontSize: 9, color: '#8b949e' }}>{rowLabel[des]}</span>
+                  <span style={{ fontSize: 9, color: '#8b949e' }}>{rowLabel[pot]}</span>
                 </div>
                 {/* Cells */}
-                {cols.map(pot => {
+                {cols.map(des => {
                   const box = NINE_BOX_MAP[`${des}-${pot}`];
                   const people = team.filter(p => (p.desempenho || 'medio') === des && (p.potencial || 'medio') === pot);
                   return (
-                    <div key={pot} style={{
+                    <div key={des} style={{
                       flex: 1, minWidth: 0,
                       background: box.bg,
                       border: `1px solid ${box.color}35`,
@@ -189,7 +189,7 @@ function NineBoxMatrix({ team }) {
           <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
             <div style={{ width: 32, flexShrink: 0 }} />
             <div style={{ flex: 1, textAlign: 'center' }}>
-              <span style={{ fontSize: 9, color: '#8b949e', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Potencial →</span>
+              <span style={{ fontSize: 9, color: '#8b949e', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Performance →</span>
             </div>
           </div>
 
@@ -359,7 +359,7 @@ export default function App() {
           {/* Desempenho + Potencial */}
           <div style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              { key: 'desempenho', label: 'Desempenho' },
+              { key: 'desempenho', label: 'Performance' },
               { key: 'potencial', label: 'Potencial' },
             ].map(({ key, label }) => (
               <div key={key}>
