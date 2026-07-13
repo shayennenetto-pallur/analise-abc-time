@@ -10,6 +10,20 @@ const CLASSIFICATIONS = [
 
 const CONFIG = Object.fromEntries(CLASSIFICATIONS.map(c => [c.id, c]));
 
+const NINE_BOX_CONFIG = [
+  { d: 'alto',  p: 'alto',  num: 9, label: 'Estrela',        color: '#2CC295', bg: '#0a2016' },
+  { d: 'alto',  p: 'medio', num: 8, label: 'Pilar',          color: '#34d399', bg: '#0d2018' },
+  { d: 'alto',  p: 'baixo', num: 7, label: 'Especialista',   color: '#58a6ff', bg: '#0d1f38' },
+  { d: 'medio', p: 'alto',  num: 6, label: 'Alto Potencial', color: '#a78bfa', bg: '#18102e' },
+  { d: 'medio', p: 'medio', num: 5, label: 'Núcleo',         color: '#f59e0b', bg: '#1c1500' },
+  { d: 'medio', p: 'baixo', num: 4, label: 'Sólido',         color: '#fbbf24', bg: '#1a1200' },
+  { d: 'baixo', p: 'alto',  num: 3, label: 'Diamante Bruto', color: '#fb923c', bg: '#1e1000' },
+  { d: 'baixo', p: 'medio', num: 2, label: 'Dilema',         color: '#f87171', bg: '#250d0d' },
+  { d: 'baixo', p: 'baixo', num: 1, label: 'Subperformance', color: '#ef4444', bg: '#2a0808' },
+];
+
+const NINE_BOX_MAP = Object.fromEntries(NINE_BOX_CONFIG.map(b => [`${b.d}-${b.p}`, b]));
+
 const inputStyle = {
   width: '100%',
   background: '#0d1117',
@@ -41,40 +55,26 @@ function PyramidTier({ ids, players, clipPath, height = 120, leftPct, rightPct }
   const mainId = ids[0];
   const c = CONFIG[mainId];
   const allPlayers = players.filter(p => ids.includes(p.classificacao));
-  const midPct = (leftPct + rightPct) / 2;
-  const visibleWidth = rightPct - leftPct; // % of container that's visible at midpoint
+  const visibleWidth = rightPct - leftPct;
 
   return (
     <div style={{ width: '100%', height, position: 'relative' }}>
-      {/* Trapezoid background */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: c.bg,
-        clipPath,
-      }} />
-      {/* Label on the left side */}
-      <div style={{
-        position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-        display: 'flex', flexDirection: 'column', gap: 2,
-      }}>
+      <div style={{ position: 'absolute', inset: 0, background: c.bg, clipPath }} />
+      <div style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         {ids.map(id => (
           <span key={id} style={{
             fontSize: 9, fontWeight: 700, color: CONFIG[id].text,
-            background: `${CONFIG[id].dot}18`,
-            border: `1px solid ${CONFIG[id].dot}40`,
-            borderRadius: 3, padding: '1px 5px', letterSpacing: '0.02em',
-            whiteSpace: 'nowrap',
+            background: `${CONFIG[id].dot}18`, border: `1px solid ${CONFIG[id].dot}40`,
+            borderRadius: 3, padding: '1px 5px', whiteSpace: 'nowrap',
           }}>
             {id === 'A (potencial)' ? 'A*' : id === 'B (potencial)' ? 'B*' : id}
           </span>
         ))}
       </div>
-      {/* Names centered in visible area */}
       <div style={{
         position: 'absolute', top: 0, bottom: 0,
         left: `${leftPct}%`, width: `${visibleWidth}%`,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: 4,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
       }}>
         {allPlayers.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
@@ -96,8 +96,125 @@ function PyramidTier({ ids, players, clipPath, height = 120, leftPct, rightPct }
   );
 }
 
+function NineBoxMatrix({ team }) {
+  const rows = ['alto', 'medio', 'baixo'];
+  const cols = ['baixo', 'medio', 'alto'];
+  const rowLabel = { alto: 'Alto', medio: 'Médio', baixo: 'Baixo' };
+  const colLabel = { baixo: 'Baixo', medio: 'Médio', alto: 'Alto' };
+
+  return (
+    <div style={{ background: '#161b22', border: '1px solid rgba(48,54,61,0.9)', borderRadius: 12, padding: 24 }}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 11, fontWeight: 600, color: '#2CC295', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+          Matriz Nine Box
+        </h2>
+        <p style={{ fontSize: 11, color: '#8b949e', marginTop: 4 }}>
+          Distribuição do time por desempenho e potencial
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        {/* Y-axis label */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 14, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 9, color: '#8b949e',
+            writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+            textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap',
+          }}>
+            Desempenho ↑
+          </span>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Grid rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {rows.map(des => (
+              <div key={des} style={{ display: 'flex', gap: 3, alignItems: 'stretch' }}>
+                {/* Row label */}
+                <div style={{ width: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 5 }}>
+                  <span style={{ fontSize: 9, color: '#8b949e' }}>{rowLabel[des]}</span>
+                </div>
+                {/* Cells */}
+                {cols.map(pot => {
+                  const box = NINE_BOX_MAP[`${des}-${pot}`];
+                  const people = team.filter(p => (p.desempenho || 'medio') === des && (p.potencial || 'medio') === pot);
+                  return (
+                    <div key={pot} style={{
+                      flex: 1, minWidth: 0,
+                      background: box.bg,
+                      border: `1px solid ${box.color}35`,
+                      borderRadius: 6, padding: '8px 10px', minHeight: 88,
+                      display: 'flex', flexDirection: 'column',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                        <span style={{
+                          width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                          background: `${box.color}20`, border: `1px solid ${box.color}45`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 9, fontWeight: 700, color: box.color,
+                        }}>{box.num}</span>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: box.color, textAlign: 'right', lineHeight: 1.3, paddingLeft: 4 }}>
+                          {box.label}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignContent: 'flex-start' }}>
+                        {people.map(person => (
+                          <span key={person.id} style={{
+                            fontSize: 10, color: '#e6edf3', fontWeight: 500,
+                            background: `${box.color}15`, border: `1px solid ${box.color}35`,
+                            borderRadius: 20, padding: '1px 7px', whiteSpace: 'nowrap',
+                          }}>
+                            {person.nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* X-axis column labels */}
+          <div style={{ display: 'flex', gap: 3, marginTop: 5 }}>
+            <div style={{ width: 32, flexShrink: 0 }} />
+            {cols.map(pot => (
+              <div key={pot} style={{ flex: 1, textAlign: 'center' }}>
+                <span style={{ fontSize: 9, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {colLabel[pot]}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
+            <div style={{ width: 32, flexShrink: 0 }} />
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <span style={{ fontSize: 9, color: '#8b949e', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Potencial →</span>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {NINE_BOX_CONFIG.slice().reverse().map(box => (
+              <div key={box.num} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{
+                  width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+                  background: `${box.color}20`, border: `1px solid ${box.color}45`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 7, fontWeight: 700, color: box.color,
+                }}>{box.num}</span>
+                <span style={{ fontSize: 10, color: '#8b949e' }}>{box.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [form, setForm] = useState({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
+  const [form, setForm] = useState({ nome: '', funcao: '', classificacao: 'A', desempenho: 'medio', potencial: 'medio', comentario: '' });
   const [team, setTeam] = useState([]);
   const [focusedInput, setFocusedInput] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -110,18 +227,18 @@ export default function App() {
     } else {
       setTeam(prev => [...prev, { ...form, id: Date.now() }]);
     }
-    setForm({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
+    setForm({ nome: '', funcao: '', classificacao: 'A', desempenho: 'medio', potencial: 'medio', comentario: '' });
   };
 
   const handleEdit = (p) => {
-    setForm({ nome: p.nome, funcao: p.funcao, classificacao: p.classificacao, comentario: p.comentario });
+    setForm({ nome: p.nome, funcao: p.funcao, classificacao: p.classificacao, desempenho: p.desempenho || 'medio', potencial: p.potencial || 'medio', comentario: p.comentario });
     setEditingId(p.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setForm({ nome: '', funcao: '', classificacao: 'A', comentario: '' });
+    setForm({ nome: '', funcao: '', classificacao: 'A', desempenho: 'medio', potencial: 'medio', comentario: '' });
   };
 
   const handleRemove = (id) => {
@@ -132,6 +249,9 @@ export default function App() {
   const focusStyle = (name) => focusedInput === name
     ? { ...inputStyle, borderColor: '#2CC295' }
     : inputStyle;
+
+  const levelColors = { baixo: '#f87171', medio: '#f59e0b', alto: '#2CC295' };
+  const levelLabels = { baixo: 'Baixo', medio: 'Médio', alto: 'Alto' };
 
   return (
     <div style={{ minHeight: '100vh', background: '#0d1117', padding: '32px 24px' }}>
@@ -153,7 +273,7 @@ export default function App() {
           Essa ferramenta ajuda a analisar a sua estrutura atual de pessoas, separando todos os colaboradores em uma pirâmide com 3 níveis.
         </p>
         <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 20, lineHeight: 1.6 }}>
-          Classifique cada uma das pessoas do seu time dentro da Matriz ABC.
+          Classifique cada uma das pessoas do seu time dentro da Matriz ABC e da Matriz Nine Box.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
           {[
@@ -236,10 +356,45 @@ export default function App() {
             />
           </div>
 
-          {/* Classificação */}
+          {/* Desempenho + Potencial */}
+          <div style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[
+              { key: 'desempenho', label: 'Desempenho' },
+              { key: 'potencial', label: 'Potencial' },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>
+                  {label}
+                </label>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {['baixo', 'medio', 'alto'].map(val => {
+                    const selected = form[key] === val;
+                    const color = levelColors[val];
+                    return (
+                      <button
+                        key={val}
+                        onClick={() => setForm({ ...form, [key]: val })}
+                        style={{
+                          flex: 1, padding: '6px 0', fontSize: 10, fontWeight: 600,
+                          borderRadius: 6, cursor: 'pointer', transition: 'all 0.12s',
+                          background: selected ? `${color}20` : 'transparent',
+                          border: `1px solid ${selected ? color : 'rgba(48,54,61,0.9)'}`,
+                          color: selected ? color : '#8b949e',
+                        }}
+                      >
+                        {levelLabels[val]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Classificação ABC */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 10 }}>
-              Classificação
+              Classificação ABC
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {CLASSIFICATIONS.map(cls => {
@@ -341,7 +496,7 @@ export default function App() {
             }}>
               <div style={{ fontSize: 28, marginBottom: 12 }}>👥</div>
               <p style={{ color: '#8b949e', fontSize: 13 }}>
-                Adicione colaboradores para ver a análise e a pirâmide ABC.
+                Adicione colaboradores para ver a análise, a pirâmide ABC e a Matriz Nine Box.
               </p>
             </div>
           )}
@@ -358,13 +513,13 @@ export default function App() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#1c2128' }}>
-                    {['Nome / Função', 'Classificação ABC', 'Comentário', ''].map((h, i) => (
+                    {['Nome / Função', 'Classificação ABC', 'Nine Box', 'Comentário', ''].map((h, i) => (
                       <th key={i} style={{
                         padding: '10px 16px', textAlign: 'left',
                         fontSize: 10, color: '#8b949e', fontWeight: 500,
                         textTransform: 'uppercase', letterSpacing: '0.06em',
                         borderBottom: '1px solid rgba(48,54,61,0.9)',
-                        width: i === 3 ? 40 : 'auto',
+                        width: i === 4 ? 40 : 'auto',
                       }}>
                         {h}
                       </th>
@@ -372,56 +527,70 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {team.map((p, i) => (
-                    <tr
-                      key={p.id}
-                      style={{
-                        background: i % 2 === 0 ? '#161b22' : '#1c2128',
-                        borderBottom: i < team.length - 1 ? '1px solid rgba(48,54,61,0.5)' : 'none',
-                      }}
-                    >
-                      <td style={{ padding: '12px 16px', minWidth: 140 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#e6edf3' }}>{p.nome}</div>
-                        {p.funcao && <div style={{ fontSize: 11, color: '#8b949e', marginTop: 2 }}>{p.funcao}</div>}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Badge id={p.classificacao} />
-                      </td>
-                      <td style={{ padding: '12px 16px', fontSize: 12, color: '#8b949e', maxWidth: 300, lineHeight: 1.5 }}>
-                        {p.comentario || <span style={{ color: 'rgba(139,148,158,0.4)' }}>—</span>}
-                      </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <button
-                          onClick={() => handleEdit(p)}
-                          title="Editar"
-                          style={{
-                            background: editingId === p.id ? 'rgba(88,166,255,0.15)' : 'none',
-                            border: `1px solid ${editingId === p.id ? 'rgba(88,166,255,0.4)' : 'transparent'}`,
-                            borderRadius: 6, color: editingId === p.id ? '#58a6ff' : '#8b949e',
-                            cursor: 'pointer', fontSize: 13, padding: '2px 7px',
-                            lineHeight: 1, transition: 'all 0.1s', marginRight: 4,
-                          }}
-                          onMouseEnter={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#58a6ff'; e.currentTarget.style.borderColor = 'rgba(88,166,255,0.3)'; }}}
-                          onMouseLeave={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'transparent'; }}}
-                        >
-                          ✎
-                        </button>
-                        <button
-                          onClick={() => handleRemove(p.id)}
-                          title="Remover"
-                          style={{
-                            background: 'none', border: '1px solid transparent', borderRadius: 6,
-                            color: '#8b949e', cursor: 'pointer', fontSize: 16, padding: '2px 6px',
-                            lineHeight: 1, transition: 'all 0.1s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'transparent'; }}
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {team.map((p, i) => {
+                    const box = NINE_BOX_MAP[`${p.desempenho || 'medio'}-${p.potencial || 'medio'}`];
+                    return (
+                      <tr
+                        key={p.id}
+                        style={{
+                          background: i % 2 === 0 ? '#161b22' : '#1c2128',
+                          borderBottom: i < team.length - 1 ? '1px solid rgba(48,54,61,0.5)' : 'none',
+                        }}
+                      >
+                        <td style={{ padding: '12px 16px', minWidth: 130 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#e6edf3' }}>{p.nome}</div>
+                          {p.funcao && <div style={{ fontSize: 11, color: '#8b949e', marginTop: 2 }}>{p.funcao}</div>}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <Badge id={p.classificacao} />
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            background: `${box.color}18`, color: box.color,
+                            border: `1px solid ${box.color}40`,
+                            borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                          }}>
+                            <span style={{ fontSize: 9 }}>{box.num}</span> {box.label}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: 12, color: '#8b949e', maxWidth: 240, lineHeight: 1.5 }}>
+                          {p.comentario || <span style={{ color: 'rgba(139,148,158,0.4)' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={() => handleEdit(p)}
+                            title="Editar"
+                            style={{
+                              background: editingId === p.id ? 'rgba(88,166,255,0.15)' : 'none',
+                              border: `1px solid ${editingId === p.id ? 'rgba(88,166,255,0.4)' : 'transparent'}`,
+                              borderRadius: 6, color: editingId === p.id ? '#58a6ff' : '#8b949e',
+                              cursor: 'pointer', fontSize: 13, padding: '2px 7px',
+                              lineHeight: 1, transition: 'all 0.1s', marginRight: 4,
+                            }}
+                            onMouseEnter={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#58a6ff'; e.currentTarget.style.borderColor = 'rgba(88,166,255,0.3)'; }}}
+                            onMouseLeave={e => { if (editingId !== p.id) { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'transparent'; }}}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => handleRemove(p.id)}
+                            title="Remover"
+                            style={{
+                              background: 'none', border: '1px solid transparent', borderRadius: 6,
+                              color: '#8b949e', cursor: 'pointer', fontSize: 16, padding: '2px 6px',
+                              lineHeight: 1, transition: 'all 0.1s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'transparent'; }}
+                          >
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -439,7 +608,6 @@ export default function App() {
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%' }}>
-                {/* Pyramid tip */}
                 <div style={{
                   width: '100%', height: 22,
                   background: CONFIG['A'].bg,
@@ -478,6 +646,9 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* Nine Box Matrix */}
+          {team.length > 0 && <NineBoxMatrix team={team} />}
         </div>
       </div>
     </div>
